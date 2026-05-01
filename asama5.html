@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Aşama 5 – Evde Risk Avcısı</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --turuncu:#FF6B35;--sari:#FFD166;--mavi:#118AB2;
+    --koyu:#073B4C;--tehlike:#FF4757;--guvenli:#2ed573;
+  }
+  body{font-family:'Nunito',sans-serif;height:100vh;overflow:hidden;
+    background:linear-gradient(180deg,#1a6fa8 0%,#5BB8E8 60%,#7BC67E 100%);}
+
+  /* BULUTLAR */
+  .cloud{position:fixed;z-index:1;opacity:.9;animation:cloudMove linear infinite;}
+  @keyframes cloudMove{from{transform:translateX(-220px)}to{transform:translateX(110vw)}}
+
+  /* ANA LAYOUT */
+  .oyun-alani{
+    position:relative;z-index:10;
+    width:100vw;height:100vh;
+    display:flex;align-items:center;
+    padding:10px;gap:12px;
+  }
+
+  /* SOL — KARKAŞ ALANI */
+  .karkas-alani{
+    flex-shrink:0;
+    width:220px;
+    display:flex;flex-direction:column;align-items:center;
+    gap:8px;height:100%;justify-content:center;
+    position:relative;
+  }
+
+  .karkas-img{
+    width:200px;height:200px;object-fit:contain;
+    filter:drop-shadow(0 8px 20px rgba(0,0,0,.3));
+    transition:transform .3s;
+    animation:pBob 2.5s ease-in-out infinite;
+  }
+  @keyframes pBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+  .karkas-img.sasir{animation:sasir .5s ease;}
+  @keyframes sasir{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(1.2) rotate(-8deg)}75%{transform:scale(1.2) rotate(8deg)}}
+  .karkas-img.sevin{animation:sevin .6s ease;}
+  @keyframes sevin{0%,100%{transform:scale(1) translateY(0)}30%{transform:scale(1.15) translateY(-18px)}60%{transform:scale(1.1) translateY(-10px)}}
+  .karkas-img.uzul{animation:uzul .5s ease;}
+  @keyframes uzul{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+
+  /* Konuşma balonu */
+  .balon{
+    background:white;border-radius:16px;border-bottom-left-radius:4px;
+    padding:10px 14px;font-size:.78rem;font-weight:800;color:#2D3047;
+    box-shadow:0 4px 16px rgba(0,0,0,.2);line-height:1.5;
+    border:2px solid rgba(255,159,28,.4);
+    width:100%;text-align:center;
+    animation:balonCik .3s ease;
+  }
+  @keyframes balonCik{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+  .balon.yukleniyor::after{content:'...';animation:nokta 1s infinite;}
+  @keyframes nokta{0%,100%{opacity:.3}50%{opacity:1}}
+
+  /* Süre */
+  .sure-kutu{
+    background:rgba(255,255,255,.25);border-radius:50px;
+    padding:6px 16px;color:white;font-weight:900;font-size:.9rem;
+    border:2px solid rgba(255,255,255,.4);text-align:center;
+    width:100%;
+  }
+  .sure-kutu.acil{background:rgba(255,71,87,.4);animation:yanip .5s infinite;}
+  @keyframes yanip{0%,100%{opacity:1}50%{opacity:.5}}
+
+  /* Tehlike sayacı */
+  .tehlike-sayac{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:4px;width:100%;
+  }
+  .tehlike-sayac .dot{
+    width:24px;height:24px;background:rgba(255,255,255,.25);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:.7rem;color:white;font-weight:900;
+    transition:background .3s,transform .3s;border:2px solid rgba(255,255,255,.3);
+  }
+  .tehlike-sayac .dot.bulundu{background:var(--tehlike);transform:scale(1.2);border-color:var(--tehlike);}
+  .tehlike-sayac .dot.guvenli-bulundu{background:var(--guvenli);transform:scale(1.2);border-color:var(--guvenli);}
+
+  /* Aşama etiketi */
+  .asama-etiket{
+    background:rgba(255,255,255,.2);border-radius:50px;
+    padding:4px 12px;color:white;font-size:.72rem;font-weight:800;
+    border:1px solid rgba(255,255,255,.3);width:100%;text-align:center;
+  }
+
+  /* SAĞ — ODA */
+  .oda-konteyner{
+    flex:1;height:calc(100vh - 20px);
+    display:flex;flex-direction:column;gap:6px;
+  }
+
+  /* Üst bar */
+  .ust-bar{
+    display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,.15);border-radius:14px;
+    padding:6px 12px;
+  }
+  .back-btn{background:rgba(255,255,255,.9);border:none;border-radius:50%;
+    width:36px;height:36px;font-size:1rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ust-baslik{color:white;font-family:'Fredoka One',cursive;
+    font-size:clamp(.8rem,2.2vw,1rem);text-shadow:1px 2px 4px rgba(0,0,0,.2);flex:1;}
+  .ses-btn{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);
+    color:white;border-radius:50px;padding:4px 12px;
+    font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer;}
+
+  /* ODA */
+  .oda-wrapper{
+    flex:1;position:relative;border-radius:18px;overflow:hidden;
+    box-shadow:0 8px 32px rgba(0,0,0,.35);
+  }
+  .oda-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+
+  /* SARSINTI */
+  @keyframes sarsinti{
+    0%,100%{transform:translate(0,0)}
+    15%{transform:translate(-7px,4px)}
+    30%{transform:translate(7px,-4px)}
+    45%{transform:translate(-9px,3px)}
+    60%{transform:translate(9px,-3px)}
+    75%{transform:translate(-5px,5px)}
+    90%{transform:translate(5px,-2px)}
+  }
+  .oda-wrapper.sarsilıyor{animation:sarsinti 1.3s ease;}
+
+  /* TIKLAMA ALANLARI */
+  .alan{position:absolute;cursor:pointer;border-radius:8px;
+    background:transparent;transition:background .2s;}
+  .alan.tehlikeli:hover{background:rgba(255,71,87,.18);}
+  .alan.guvenli-alan:hover{background:rgba(46,213,115,.18);}
+  .alan.pasif{pointer-events:none;opacity:.4;}
+
+  .rozet{position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-50%) scale(0);
+    font-size:clamp(1.6rem,4vw,2.2rem);
+    opacity:0;transition:opacity .3s,transform .4s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:none;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));}
+  .alan.gosterildi .rozet{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+  @keyframes parlaTehlike{
+    0%,100%{box-shadow:inset 0 0 0 3px var(--tehlike)}
+    50%{box-shadow:inset 0 0 0 6px var(--tehlike),0 0 20px var(--tehlike)}
+  }
+  @keyframes parlaGuvenli{
+    0%,100%{box-shadow:inset 0 0 0 3px var(--guvenli)}
+    50%{box-shadow:inset 0 0 0 6px var(--guvenli),0 0 20px var(--guvenli)}
+  }
+  .alan.gosterildi.tehlikeli{animation:parlaTehlike .7s ease;}
+  .alan.gosterildi.guvenli-alan{animation:parlaGuvenli .7s ease;}
+
+  /* UYARI */
+  .uyari{position:fixed;top:16px;left:50%;transform:translateX(-50%);
+    padding:8px 20px;border-radius:50px;font-weight:800;font-size:.84rem;
+    opacity:0;pointer-events:none;z-index:200;transition:opacity .3s;
+    white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+  .uyari.goster{opacity:1;}
+  .uyari.yanlis{background:#FF4757;color:white;}
+  .uyari.dogru{background:var(--guvenli);color:white;}
+
+  /* GEÇIŞ MESAJI */
+  .gecis-mesaji{
+    display:none;position:fixed;inset:0;
+    background:rgba(7,59,76,.85);z-index:90;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .gecis-mesaji.aktif{display:flex;animation:fadeIn .4s ease;}
+  .gm-kart{background:#fff;border-radius:24px;padding:24px 20px;
+    max-width:380px;width:100%;text-align:center;
+    box-shadow:0 12px 40px rgba(0,0,0,.3);}
+  .gm-kart h2{font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--koyu);margin-bottom:8px;}
+  .gm-kart p{font-size:.86rem;color:#555;margin-bottom:16px;line-height:1.5;}
+  .btn-devam{background:linear-gradient(135deg,#06D6A0,#118AB2);color:white;
+    border:none;padding:12px 28px;border-radius:50px;
+    font-family:'Fredoka One',cursive;font-size:1rem;
+    cursor:pointer;box-shadow:0 5px 0 #0a6b54;}
+
+  /* TAMAMLANDI */
+  .tamamlandi{display:none;position:fixed;inset:0;
+    background:rgba(7,59,76,.9);z-index:100;
+    align-items:center;justify-content:center;padding:20px;}
+  .tamamlandi.aktif{display:flex;animation:fadeIn .5s ease;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .t-kart{background:#fff;border-radius:28px;padding:22px 20px;
+    max-width:400px;width:100%;text-align:center;
+    box-shadow:0 16px 48px rgba(0,0,0,.3);}
+  .t-kart .brozet{font-size:3rem;margin-bottom:4px;}
+  .t-kart h2{font-family:'Fredoka One',cursive;font-size:1.3rem;color:var(--koyu);margin-bottom:6px;}
+  .sure-sonuc{color:var(--mavi);font-weight:900;font-size:.9rem;margin-bottom:6px;}
+  .t-gorsel{width:100px;border-radius:50%;margin:8px auto;display:block;
+    border:4px solid var(--sari);}
+  .ozet{background:#FFF9EF;border-radius:14px;padding:10px 14px;
+    margin:10px 0;text-align:left;font-size:.76rem;color:var(--koyu);line-height:1.9;}
+  .t-kart p{font-size:.82rem;color:#555;margin-bottom:6px;line-height:1.5;}
+  .btn-ileri{background:linear-gradient(135deg,#FFE033,#FF9F1C);color:#2D3047;
+    border:none;padding:12px 28px;border-radius:50px;
+    font-family:'Fredoka One',cursive;font-size:.96rem;
+    cursor:pointer;box-shadow:0 6px 0 #c27700;margin-top:8px;}
+
+  /* SURE BITTI */
+  .sure-bitti{display:none;position:fixed;inset:0;
+    background:rgba(80,0,0,.88);z-index:100;
+    align-items:center;justify-content:center;padding:20px;}
+  .sure-bitti.aktif{display:flex;animation:fadeIn .4s ease;}
+  .sb-kart{background:#fff;border-radius:28px;padding:22px 20px;
+    max-width:360px;width:100%;text-align:center;}
+  .sb-kart h2{font-family:'Fredoka One',cursive;font-size:1.3rem;color:#c0392b;margin-bottom:8px;}
+  .sb-kart p{font-size:.84rem;color:#555;margin-bottom:14px;}
+  .btn-tekrar{background:#e74c3c;color:white;border:none;padding:12px 26px;
+    border-radius:50px;font-family:'Fredoka One',cursive;font-size:.96rem;
+    cursor:pointer;box-shadow:0 5px 0 #a93226;}
+
+  /* MİNİ KONFETİ */
+  .mini-konfeti{position:fixed;width:8px;height:8px;border-radius:50%;
+    pointer-events:none;z-index:300;animation:miniUc .8s ease forwards;}
+  @keyframes miniUc{
+    0%{transform:translate(0,0) scale(1);opacity:1;}
+    100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}
+  }
+
+  /* BÜYÜK KONFETİ */
+  .konfeti-parcasi{position:fixed;width:10px;height:10px;border-radius:2px;
+    pointer-events:none;z-index:99;animation:duser 1.5s ease-in forwards;}
+  @keyframes duser{
+    0%{transform:translateY(-20px) rotate(0deg);opacity:1;}
+    100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+
+<!-- BULUTLAR -->
+<div class="cloud" style="top:6%;animation-duration:20s;animation-delay:0s">
+  <svg width="130" height="52" viewBox="0 0 130 52"><ellipse cx="65" cy="37" rx="60" ry="20" fill="white"/><ellipse cx="42" cy="28" rx="30" ry="20" fill="white"/><ellipse cx="82" cy="26" rx="24" ry="17" fill="white"/></svg>
+</div>
+<div class="cloud" style="top:16%;animation-duration:27s;animation-delay:8s">
+  <svg width="95" height="40" viewBox="0 0 95 40"><ellipse cx="47" cy="28" rx="42" ry="15" fill="white"/><ellipse cx="30" cy="21" rx="22" ry="14" fill="white"/><ellipse cx="63" cy="19" rx="19" ry="13" fill="white"/></svg>
+</div>
+<div class="cloud" style="top:3%;animation-duration:34s;animation-delay:15s">
+  <svg width="160" height="58" viewBox="0 0 160 58"><ellipse cx="80" cy="42" rx="72" ry="21" fill="white"/><ellipse cx="52" cy="32" rx="34" ry="23" fill="white"/><ellipse cx="102" cy="30" rx="30" ry="19" fill="white"/></svg>
+</div>
+
+<div class="oyun-alani">
+
+  <!-- SOL: KARKAŞ -->
+  <div class="karkas-alani">
+    <div class="asama-etiket" id="asama-etiket">Aşama 5</div>
+
+    <img class="karkas-img" id="karkas-img" src="karkas-mutlu.png" alt="Karkaş">
+
+    <div class="balon" id="balon">
+      Merhaba! Bu odada tehlikeli yerler gizlenmiş. Hepsini bul!
+    </div>
+
+    <div class="sure-kutu" id="sure-kutu">
+      ⏱️ <span id="sure-goster">60</span> sn
+    </div>
+
+    <div class="tehlike-sayac" id="tehlike-sayac">
+      <div class="dot" id="d1">1</div>
+      <div class="dot" id="d2">2</div>
+      <div class="dot" id="d3">3</div>
+      <div class="dot" id="d4">4</div>
+      <div class="dot" id="d5">5</div>
+      <div class="dot" id="d6">6</div>
+    </div>
+  </div>
+
+  <!-- SAĞ: ODA -->
+  <div class="oda-konteyner">
+
+    <!-- ÜST BAR -->
+    <div class="ust-bar">
+      <button class="back-btn" onclick="window.location.href='index.html'">&#8592;</button>
+      <div class="ust-baslik" id="ust-baslik">🏠 Evde Risk Avcısı — Tehlikeli yerleri bul!</div>
+      <button class="ses-btn" id="sesBtn" onclick="sesDegistir()">🔊 Ses</button>
+    </div>
+
+    <!-- ODA -->
+    <div class="oda-wrapper" id="oda-wrapper">
+      <img class="oda-bg" src="tehlikeavi-oda.png" alt="oda">
+
+      <!-- TEHLİKELİ ALANLAR -->
+      <div class="alan tehlikeli" id="solresim"
+           style="left:0%;top:3%;width:13%;height:34%"
+           onclick="tikla('solresim',event)">
+        <div class="rozet" id="r-solresim">⚠️</div>
+      </div>
+
+      <div class="alan tehlikeli" id="kitaplik"
+           style="left:13%;top:3%;width:22%;height:86%"
+           onclick="tikla('kitaplik',event)">
+        <div class="rozet" id="r-kitaplik">⚠️</div>
+      </div>
+
+      <div class="alan tehlikeli" id="vazo"
+           style="left:53%;top:2%;width:13%;height:20%"
+           onclick="tikla('vazo',event)">
+        <div class="rozet" id="r-vazo">⚠️</div>
+      </div>
+
+      <div class="alan tehlikeli" id="ortaresim"
+           style="left:37%;top:28%;width:24%;height:24%"
+           onclick="tikla('ortaresim',event)">
+        <div class="rozet" id="r-ortaresim">⚠️</div>
+      </div>
+
+      <div class="alan tehlikeli" id="lamba"
+           style="left:63%;top:25%;width:9%;height:44%"
+           onclick="tikla('lamba',event)">
+        <div class="rozet" id="r-lamba">⚠️</div>
+      </div>
+
+      <div class="alan tehlikeli" id="pencere"
+           style="left:77%;top:2%;width:23%;height:75%"
+           onclick="tikla('pencere',event)">
+        <div class="rozet" id="r-pencere">⚠️</div>
+      </div>
+
+      <!-- GÜVENLİ ALANLAR (başta pasif) -->
+      <div class="alan guvenli-alan pasif" id="koltuk"
+           style="left:0%;top:44%;width:24%;height:52%"
+           onclick="tikla('koltuk',event)">
+        <div class="rozet" id="r-koltuk">✅</div>
+      </div>
+
+      <div class="alan guvenli-alan pasif" id="masa"
+           style="left:33%;top:44%;width:42%;height:54%"
+           onclick="tikla('masa',event)">
+        <div class="rozet" id="r-masa">✅</div>
+      </div>
+
+    </div><!-- /oda -->
+  </div><!-- /oda-konteyner -->
+</div><!-- /oyun-alani -->
+
+<!-- UYARI -->
+<div class="uyari" id="uyari"></div>
+
+<!-- GEÇİŞ MESAJI (tehlike → güvenli) -->
+<div class="gecis-mesaji" id="gecis-mesaji">
+  <div class="gm-kart">
+    <div style="font-size:2.5rem">🎉</div>
+    <h2>Harika! Tüm tehlikeleri buldun!</h2>
+    <p>Şimdi güvenli yerleri de bul!<br>Depremde nereye sığınabilirsin?</p>
+    <button class="btn-devam" onclick="guvenliAsamaBaslat()">Güvenli Yerleri Bul!</button>
+  </div>
+</div>
+
+<!-- TAMAMLANDI -->
+<div class="tamamlandi" id="tamamlandi">
+  <div class="t-kart">
+    <div class="brozet">🏆</div>
+    <h2>Süpersin! Her şeyi öğrendin!</h2>
+    <div class="sure-sonuc" id="sure-sonuc"></div>
+    <img class="t-gorsel" src="karkas-mutlu.png" alt="Karkaş">
+    <div class="ozet">
+      ⚠️ Kitaplık, vazo, resimler, lamba, pencere — tehlikeli!<br>
+      ✅ Masa altı ve koltuk yanı — güvenli sığınak!<br>
+      🐧 Depremde: ÇÖK – KAPAN – TUTUN!
+    </div>
+    <button class="btn-ileri" onclick="asama_ileri()">Aşama 6'ya Geç →</button>
+  </div>
+</div>
+
+<!-- SÜRE BİTTİ -->
+<div class="sure-bitti" id="sure-bitti">
+  <div class="sb-kart">
+    <div style="font-size:2.5rem">⏰</div>
+    <h2>Süre Doldu!</h2>
+    <p><span id="bitti-bulundu">0</span> / 6 tehlike buldun. Tekrar dene!</p>
+    <button class="btn-tekrar" onclick="oyunuBaslat()">Tekrar Dene</button>
+  </div>
+</div>
+
+<script>
+  // SES
+  let sesAcik = true;
+  const synth = window.speechSynthesis;
+  function sesDegistir(){
+    sesAcik = !sesAcik;
+    document.getElementById('sesBtn').textContent = sesAcik ? '🔊 Ses' : '🔇 Ses';
+    if(!sesAcik) synth.cancel();
+  }
+  function seslendir(metin){
+    if(!sesAcik) return;
+    synth.cancel();
+    const temiz = metin.replace(/[^\u0000-\u024F\u011E\u011F\u0130\u0131\u015E\u015F ]/g,' ').trim();
+    const u = new SpeechSynthesisUtterance(temiz);
+    u.lang='tr-TR'; u.rate=0.9; u.pitch=1.1;
+    synth.speak(u);
+  }
+
+  // KARKAŞ
+  function karkas_goster(hal, animasyon){
+    const img = document.getElementById('karkas-img');
+    img.src = 'karkas-' + hal + '.png';
+    if(animasyon){
+      img.classList.remove('sasir','sevin','uzul');
+      void img.offsetWidth;
+      img.classList.add(animasyon);
+    }
+  }
+
+  // BALON
+  async function balonGoster(mesaj, apiMesaj){
+    const balon = document.getElementById('balon');
+    balon.innerHTML = mesaj;
+    balon.classList.remove('yukleniyor');
+
+    if(apiMesaj){
+      balon.innerHTML = '';
+      balon.classList.add('yukleniyor');
+      try{
+        const res = await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            model:"claude-sonnet-4-20250514",
+            max_tokens:1000,
+            system:"Sen Karkaş adında sevimli bir penguen rehbersin. 5-8 yaş çocuklara deprem güvenliğini öğretiyorsun. Türkçe karakterleri doğru kullan. Emoji kullanma. 3-4 cümle yaz: önce neden tehlikeli ya da güvenli olduğunu açıkla, sonra çocuğa ne yapması gerektiğini söyle. Samimi ve eğlenceli bir dil kullan.",
+            messages:[{role:"user",content:apiMesaj}]
+          })
+        });
+        const data = await res.json();
+        const yanit = data.content?.[0]?.text || mesaj;
+        balon.classList.remove('yukleniyor');
+        balon.innerHTML = yanit;
+        seslendir(yanit);
+      }catch(e){
+        balon.classList.remove('yukleniyor');
+        balon.innerHTML = mesaj;
+        seslendir(mesaj);
+      }
+    } else {
+      seslendir(mesaj);
+    }
+  }
+
+  // NESNELER
+  const TEHLIKELILER = {
+    solresim:{
+      kisa:"Duvardaki resim tehlikeli!",
+      api:"Çocuğa anlat: Sol duvardaki resim depremde çivilerin tutmaması yüzünden düşebilir. Asılı eşyaların tam altında durmak çok tehlikelidir, çünkü üstüne çarpabilir.",
+      karkas:"sasirmis", anim:"sasir"
+    },
+    kitaplik:{
+      kisa:"Kitaplık çok tehlikeli!",
+      api:"Çocuğa anlat: Kitaplıklar depremde önce sallanır, sonra devrilir. Hem kitaplığın kendisi hem de içindeki kitaplar düşerek ciddi yaralanmalara yol açabilir. Duvara sabitlenmemiş kitaplıktan uzak durmak gerekir.",
+      karkas:"uzgun", anim:"uzul"
+    },
+    vazo:{
+      kisa:"Vazo yüksekte, düşebilir!",
+      api:"Çocuğa anlat: Yüksek raftaki vazo sarsıntıyla sallanır ve aşağı düşer. Cam veya seramik olduğu için kırılır ve keskin parçalar etrafa saçılır. Kırılgan eşyaları yüksek yerlere koymamak gerekir.",
+      karkas:"sasirmis", anim:"sasir"
+    },
+    ortaresim:{
+      kisa:"Bu resim de tehlikeli!",
+      api:"Çocuğa anlat: Duvara asılı bu resim de depremde düşebilir. Büyük çerçeveler oldukça ağırdır, altında birisi varsa ciddi yaralayabilir. Asılı eşyaların altında oturmamak ve durmamak gerekir.",
+      karkas:"uzgun", anim:"uzul"
+    },
+    lamba:{
+      kisa:"Lamba devrilebilir!",
+      api:"Çocuğa anlat: Ayaklı lambalar sarsıntıda devrilir. Hem düşerek yaralayabilir hem de elektrik kablosu nedeniyle yangın çıkma riski taşır. Lambadan uzak durmak gerekir.",
+      karkas:"sasirmis", anim:"sasir"
+    },
+    pencere:{
+      kisa:"Pencere çok tehlikeli!",
+      api:"Çocuğa anlat: Depremde binalar sallandığında cam yüzeyleri kırılır ve keskin parçalar etrafa saçılır. Pencere kenarında durmak ya da cama yakın olmak çok tehlikelidir. Deprem sırasında pencerelerden uzak durmak gerekir.",
+      karkas:"uzgun", anim:"uzul"
+    }
+  };
+
+  const GUVENLILIK = {
+    koltuk:{
+      kisa:"Aferin! Koltuk yanı güvenli!",
+      api:"Çocuğa anlat: Büyük ve dolgun koltuğun yanına çömelip çök kapan tutun pozisyonunu alabilirsin. Koltuğun yanı seni düşen eşyalardan korur. Başını kollarınla kapat ve öyle bekle.",
+      karkas:"mutlu", anim:"sevin"
+    },
+    masa:{
+      kisa:"Süper! Masa altı en güvenli yer!",
+      api:"Çocuğa anlat: Sağlam ve kalın bacaklı bir masanın altı depremde en güvenli yerdir. Masa seni düşen eşyalardan korur. Hemen altına gir, masanın bacağını tut ve çök kapan tutun yap.",
+      karkas:"mutlu", anim:"sevin"
+    }
+  };
+
+  let bulunanTehlike = 0;
+  let bulunanGuvenli = 0;
+  let tiklanmislar = [];
+  let sure = 60;
+  let sayacInterval = null;
+  let oyunBitti = false;
+  let guvenliAsamada = false;
+
+  function uyariGoster(mesaj, tip){
+    const u = document.getElementById('uyari');
+    u.textContent = mesaj;
+    u.className = 'uyari goster ' + tip;
+    setTimeout(()=>u.classList.remove('goster'), 2200);
+  }
+
+  function miniKonfeti(x, y){
+    const renkler = ['#FF6B35','#FFD166','#06D6A0','#118AB2','#FF4757','#9b59b6'];
+    for(let i=0; i<12; i++){
+      const p = document.createElement('div');
+      p.className = 'mini-konfeti';
+      const angle = (i/12)*360;
+      const dist = 40 + Math.random()*40;
+      const tx = Math.cos(angle*Math.PI/180)*dist;
+      const ty = Math.sin(angle*Math.PI/180)*dist - 30;
+      p.style.cssText = `left:${x}px;top:${y}px;background:${renkler[Math.floor(Math.random()*renkler.length)]};--tx:${tx}px;--ty:${ty}px;animation-delay:${Math.random()*.2}s;`;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(), 900);
+    }
+  }
+
+  function buyukKonfeti(){
+    const renkler=['#FF6B35','#FFD166','#06D6A0','#118AB2','#FF4757'];
+    for(let i=0;i<70;i++){
+      const p=document.createElement('div');
+      p.className='konfeti-parcasi';
+      p.style.cssText=`left:${Math.random()*100}vw;top:-20px;background:${renkler[Math.floor(Math.random()*renkler.length)]};animation-delay:${Math.random()*1.2}s;animation-duration:${1.2+Math.random()*.8}s;`;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),2500);
+    }
+  }
+
+  function sureGuncelle(){
+    sure--;
+    document.getElementById('sure-goster').textContent = sure;
+    if(sure<=10) document.getElementById('sure-kutu').classList.add('acil');
+    if(sure<=0){
+      clearInterval(sayacInterval);
+      if(!oyunBitti) sureBitti();
+    }
+  }
+
+  function sureBitti(){
+    oyunBitti = true;
+    synth.cancel();
+    document.getElementById('bitti-bulundu').textContent = bulunanTehlike;
+    document.getElementById('sure-bitti').classList.add('aktif');
+    karkas_goster('uzgun','uzul');
+    seslendir('Süre doldu! ' + bulunanTehlike + ' tehlike buldun. Tekrar dene!');
+  }
+
+  async function tikla(id, event){
+    if(tiklanmislar.includes(id) || oyunBitti) return;
+
+    const el = document.getElementById(id);
+    if(el.classList.contains('pasif')) return;
+
+    tiklanmislar.push(id);
+
+    const rect = el.getBoundingClientRect();
+    const mx = rect.left + rect.width/2;
+    const my = rect.top + rect.height/2;
+
+    if(!guvenliAsamada && TEHLIKELILER[id]){
+      const nesne = TEHLIKELILER[id];
+      bulunanTehlike++;
+      el.classList.add('gosterildi');
+
+      document.getElementById('d'+bulunanTehlike).classList.add('bulundu');
+      miniKonfeti(mx, my);
+      uyariGoster('Tehlike buldun! ' + nesne.kisa, 'dogru');
+      karkas_goster(nesne.karkas, nesne.anim);
+      await balonGoster(nesne.kisa, nesne.api);
+
+      if(bulunanTehlike >= 6){
+        clearInterval(sayacInterval);
+        setTimeout(()=>{
+          const oda = document.getElementById('oda-wrapper');
+          oda.classList.add('sarsilıyor');
+          karkas_goster('sasirmis','sasir');
+          seslendir('Deprem! Hızlıca güvenli yere kaç!');
+          setTimeout(()=>{
+            oda.classList.remove('sarsilıyor');
+            document.getElementById('gecis-mesaji').classList.add('aktif');
+          }, 1400);
+        }, 1000);
+      }
+
+    } else if(guvenliAsamada && GUVENLILIK[id]){
+      const nesne = GUVENLILIK[id];
+      bulunanGuvenli++;
+      el.classList.add('gosterildi');
+
+      const dIdx = 6 + bulunanGuvenli; // d7, d8 yok ama dot rengi yeşil olsun
+      miniKonfeti(mx, my);
+      uyariGoster(nesne.kisa, 'dogru');
+      karkas_goster(nesne.karkas, nesne.anim);
+      await balonGoster(nesne.kisa, nesne.api);
+
+      if(bulunanGuvenli >= 2){
+        oyunBitti = true;
+        setTimeout(()=>{
+          buyukKonfeti();
+          karkas_goster('mutlu','sevin');
+          const gecenSure = 60 - sure;
+          document.getElementById('sure-sonuc').textContent = gecenSure + ' saniyede tamamladın!';
+          seslendir('İnanılmaz! Her şeyi öğrendin! Artık depremde ne yapacağını biliyorsun!');
+          document.getElementById('tamamlandi').classList.add('aktif');
+        }, 1500);
+      }
+    }
+  }
+
+  function guvenliAsamaBaslat(){
+    guvenliAsamada = true;
+    document.getElementById('gecis-mesaji').classList.remove('aktif');
+
+    // Güvenli alanları aktif et
+    document.getElementById('koltuk').classList.remove('pasif');
+    document.getElementById('masa').classList.remove('pasif');
+
+    // Tehlikeli alanları pasif yap
+    Object.keys(TEHLIKELILER).forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && !el.classList.contains('gosterildi')) el.classList.add('pasif');
+    });
+
+    // Sayacı sıfırla güvenli aşama için
+    document.getElementById('tehlike-sayac').innerHTML = `
+      <div class="dot" id="g1" style="background:rgba(46,213,115,.3)">?</div>
+      <div class="dot" id="g2" style="background:rgba(46,213,115,.3)">?</div>
+    `;
+
+    document.getElementById('ust-baslik').textContent = 'Güvenli yerleri bul!';
+    document.getElementById('asama-etiket').textContent = 'Güvenli Yer';
+    karkas_goster('mutlu','sevin');
+    balonGoster('Aferin! Şimdi güvenli yerleri bul. Depremde nereye sığınırsın?', null);
+    seslendir('Aferin! Şimdi güvenli yerleri bul. Depremde nereye sığınırsın?');
+
+    // Süreyi yeniden başlat
+    sure = 45;
+    document.getElementById('sure-goster').textContent = sure;
+    document.getElementById('sure-kutu').classList.remove('acil');
+    sayacInterval = setInterval(sureGuncelle, 1000);
+  }
+
+  function oyunuBaslat(){
+    bulunanTehlike = 0;
+    bulunanGuvenli = 0;
+    tiklanmislar = [];
+    sure = 60;
+    oyunBitti = false;
+    guvenliAsamada = false;
+
+    document.getElementById('sure-goster').textContent = '60';
+    document.getElementById('sure-kutu').classList.remove('acil');
+    document.getElementById('sure-bitti').classList.remove('aktif');
+    document.getElementById('tamamlandi').classList.remove('aktif');
+    document.getElementById('gecis-mesaji').classList.remove('aktif');
+    document.getElementById('ust-baslik').textContent = 'Evde Risk Avcısı — Tehlikeli yerleri bul!';
+    document.getElementById('asama-etiket').textContent = 'Aşama 5';
+
+    // Sayaç rozetleri sıfırla
+    document.getElementById('tehlike-sayac').innerHTML = `
+      <div class="dot" id="d1">1</div><div class="dot" id="d2">2</div>
+      <div class="dot" id="d3">3</div><div class="dot" id="d4">4</div>
+      <div class="dot" id="d5">5</div><div class="dot" id="d6">6</div>
+    `;
+
+    // Alanları sıfırla
+    [...Object.keys(TEHLIKELILER), ...Object.keys(GUVENLILIK)].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el){
+        el.classList.remove('gosterildi');
+        if(GUVENLILIK[id]) el.classList.add('pasif');
+        else el.classList.remove('pasif');
+      }
+    });
+
+    karkas_goster('mutlu', null);
+    clearInterval(sayacInterval);
+
+    // Giriş konuşması — sayaç konuşma bittikten sonra başlasın
+    const girisMetni = 'Merhaba! Ben Karkaş! Seninle deprem güvenliğini öğreneceğiz. Bu odada 6 tehlikeli yer gizlenmiş. Tehlikeli yerleri bulup tıkla, sonra güvenli yerleri de keşfet! Hazır mısın? Süren başlıyor!';
+    document.getElementById('balon').textContent = girisMetni;
+    seslendir(girisMetni);
+
+    // Sayaç 4 saniye sonra başlasın
+    setTimeout(()=>{
+      sayacInterval = setInterval(sureGuncelle, 1000);
+    }, 4000);
+  }
+
+  function asama_ileri(){
+    window.location.href = 'asama6.html';
+  }
+
+  window.addEventListener('load',()=>{
+    setTimeout(()=>oyunuBaslat(), 500);
+  });
+</script>
+</body>
+</html>
