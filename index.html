@@ -303,7 +303,11 @@ body{font-family:'Nunito',sans-serif;min-height:100vh;overflow-x:hidden;user-sel
 </style>
 </head>
 <body>
-
+<script>
+  if(sessionStorage.getItem('startStage')==='1'){
+    document.documentElement.style.visibility='hidden';
+  }
+</script>
 <div class="sky"></div>
 <div class="sun"></div>
 <div class="cloud c1"><div class="cs" style="width:86px;height:26px"><div style="position:absolute;width:38px;height:38px;background:white;border-radius:50%;top:-21px;left:13px"></div><div style="position:absolute;width:26px;height:26px;background:white;border-radius:50%;top:-11px;left:42px"></div></div></div>
