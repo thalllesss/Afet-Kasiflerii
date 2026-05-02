@@ -1057,13 +1057,17 @@ function closeParent(){
   try{ localStorage.setItem('afetNote', document.getElementById('noteArea').value); }catch(e){}
   showModules();
 }
-function startModule(){ ST.stage=1; ST.s1done.clear(); loadStage(1); showScr('ss');
-  setTimeout(()=>{ SES.acilis(); setTimeout(()=>SES.okuTTS('Nesneleri keşfedelim! Her nesneye dokun!'), 700); }, 300);
+function startModule(){ window.location.href='evde-risk-avcisi.html';
 }
 
 // ══════════════════════════════════
 // AŞAMA YÜKLEYİCİ
 // ══════════════════════════════════
+// Evde Risk Avcısı'ndan döndüyse Keşif Zamanı'nı başlat 
+  if(new URLSearchParams(location.search).get('stage')==='1'){
+  ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
+  setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri keşfedelim! Her nesneye dokun!'), 700); }, 300);
+}
 function loadStage(n){
   ST.stage=n;
   document.getElementById('nextBtn').classList.remove('show');
