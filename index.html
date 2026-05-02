@@ -939,7 +939,7 @@ function showScr(id){
   document.getElementById('parBtn').style.display = ['sm','ss'].includes(id)?'flex':'none';
   window.scrollTo(0,0);
 }
-function showModules(){ updateDots(); showScr('sm'); }
+function showModules(){ document.getElementById('sm').style.display=''; updateDots(); showScr('sm'); }
 function goBack(){ showScr('sm'); }
 function showParent(){ openParent(); }
 
@@ -1756,10 +1756,11 @@ function araVeriKopyala() {
 window.addEventListener('load', function(){
   if(sessionStorage.getItem('startStage')==='1'){
     sessionStorage.removeItem('startStage');
-    // Ana menüyü gizle, direkt aşamayı göster
-    document.getElementById('sm').style.display='none';
     ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
     setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri kesfedelim!'), 700); }, 300);
+  } else {
+    document.getElementById('sm').style.display='';
+    updateDots(); showScr('sm');
   }
 });
 </script>
