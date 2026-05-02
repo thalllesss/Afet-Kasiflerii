@@ -1064,11 +1064,6 @@ function startModule(){ window.location.href='evde-risk-avcisi.html';
 // AŞAMA YÜKLEYİCİ
 // ══════════════════════════════════
 // Evde Risk Avcısı'ndan döndüyse Keşif Zamanı'nı başlat
-if(sessionStorage.getItem('startStage')==='1'){
-  sessionStorage.removeItem('startStage');
-  ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
-  setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri kesfedelim!'), 700); }, 300);
-}
 function loadStage(n){
   document.getElementById('nextBtn').classList.remove('show');
   const cfg=[
@@ -1758,6 +1753,13 @@ function araVeriKopyala() {
     }
   } catch(e) { alert('Kodu elle kopyalayın.'); }
 }
+window.addEventListener('load', function(){
+  if(sessionStorage.getItem('startStage')==='1'){
+    sessionStorage.removeItem('startStage');
+    ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
+    setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri kesfedelim!'), 700); }, 300);
+  }
+});
 </script>
 </body>
 </html>
