@@ -1761,7 +1761,11 @@ window.addEventListener('load', function(){
   if(sessionStorage.getItem('startStage')==='1'){
     sessionStorage.removeItem('startStage');
     ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
-    setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri kesfedelim!'), 700); }, 300);
+    setTimeout(()=>{ 
+      document.documentElement.style.visibility='visible';
+      SES?.acilis?.(); 
+      setTimeout(()=>SES?.okuTTS?.('Nesneleri kesfedelim!'), 700); 
+    }, 100);
   }
 });
 </script>
