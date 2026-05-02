@@ -1756,6 +1756,8 @@ function araVeriKopyala() {
 window.addEventListener('load', function(){
   if(sessionStorage.getItem('startStage')==='1'){
     sessionStorage.removeItem('startStage');
+    // Ana menüyü gizle, direkt aşamayı göster
+    document.getElementById('sm').style.display='none';
     ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
     setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri kesfedelim!'), 700); }, 300);
   }
