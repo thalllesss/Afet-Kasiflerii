@@ -1064,7 +1064,11 @@ function startModule(){ window.location.href='evde-risk-avcisi.html';
 // AŞAMA YÜKLEYİCİ
 // ══════════════════════════════════
 // Evde Risk Avcısı'ndan döndüyse Keşif Zamanı'nı başlat 
-  if(new URLSearchParams(location.search).get('stage')==='1'){
+  if(sessionStorage.getItem('startStage')==='1'){
+  sessionStorage.removeItem('startStage');
+  ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
+  setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri kesfedelim!'), 700); }, 300);
+}
   ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
   setTimeout(()=>{ SES?.acilis?.(); setTimeout(()=>SES?.okuTTS?.('Nesneleri keşfedelim! Her nesneye dokun!'), 700); }, 300);
 }
