@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- Cache buster: v2 -->
+<title>Evde Risk Avcısı</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--tehlike:#FF4757;--guvenli:#2ed573;--sari:#FFD166;--mavi:#118AB2;--koyu:#073B4C;}
+body{font-family:'Nunito',sans-serif;height:100vh;overflow:hidden;background:linear-gradient(180deg,#1a6fa8 0%,#5BB8E8 55%,#7BC67E 100%);}
+
+.cloud{position:fixed;z-index:1;animation:cloudMove linear infinite;}
+@keyframes cloudMove{from{transform:translateX(-250px)}to{transform:translateX(110vw)}}
+
+/* Tablet ve bilgisayar — yatay layout */
+.oyun{position:relative;z-index:10;width:100vw;height:100vh;display:flex;align-items:stretch;padding:10px;gap:10px;}
+.sol{width:220px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
+.karkas-img{width:190px;height:190px;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(0,0,0,.35));animation:bob 2.5s ease-in-out infinite;}
+
+/* Telefon — dikey layout */
+@media(max-width:600px){
+  .oyun{flex-direction:column;padding:6px;gap:6px;overflow-y:auto;height:auto;min-height:100vh;}
+  .sol{width:100%;flex-direction:row;justify-content:space-between;align-items:center;gap:8px;padding:4px;}
+  .karkas-img{width:80px;height:80px;}
+  .balon{font-size:.75rem;min-height:auto;padding:8px 10px;}
+  .sayac{gap:3px;}
+  .sayac .dot{width:20px;height:20px;font-size:.6rem;}
+  .etiket{display:none;}
+  .sag{flex:1;}
+  .oda-wrapper{aspect-ratio:4/3;width:100%;}
+  .rozet{font-size:1.4rem;}
+}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+.karkas-img.sasir{animation:sasir .5s ease forwards;}
+@keyframes sasir{0%,100%{transform:scale(1)}25%{transform:scale(1.25) rotate(-10deg)}75%{transform:scale(1.25) rotate(10deg)}}
+.karkas-img.sevin{animation:sevin .7s ease forwards;}
+@keyframes sevin{0%{transform:translateY(0)}30%{transform:translateY(-22px) scale(1.15)}60%{transform:translateY(-12px)}100%{transform:translateY(0)}}
+.karkas-img.uzul{animation:uzul .5s ease forwards;}
+@keyframes uzul{0%,100%{transform:rotate(0)}33%{transform:rotate(-12deg)}66%{transform:rotate(12deg)}}
+
+.balon{background:white;border-radius:18px;border-top-left-radius:4px;padding:12px 14px;font-size:.82rem;font-weight:800;color:#2D3047;line-height:1.6;box-shadow:0 6px 20px rgba(0,0,0,.2);border:2px solid rgba(255,159,28,.4);width:100%;min-height:70px;}
+
+.sayac{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;width:100%;}
+.sayac .dot{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:900;color:white;transition:all .3s;}
+.sayac .dot.t-bulundu{background:var(--tehlike);border-color:var(--tehlike);transform:scale(1.2);}
+.sayac .dot.g-bulundu{background:var(--guvenli);border-color:var(--guvenli);transform:scale(1.2);}
+.etiket{background:rgba(255,255,255,.18);border-radius:50px;padding:4px 14px;color:white;font-size:.74rem;font-weight:800;border:1px solid rgba(255,255,255,.3);width:100%;text-align:center;}
+
+.sag{flex:1;display:flex;flex-direction:column;gap:6px;}
+.ust-bar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:14px;padding:6px 12px;flex-shrink:0;}
+.back-btn{background:rgba(255,255,255,.92);border:none;border-radius:50%;width:36px;height:36px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.baslik{flex:1;color:white;font-family:'Fredoka One',cursive;font-size:clamp(.78rem,2vw,.98rem);text-shadow:1px 2px 4px rgba(0,0,0,.2);}
+.ses-btn{background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.4);color:white;border-radius:50px;padding:4px 12px;font-family:'Nunito',sans-serif;font-size:.74rem;font-weight:800;cursor:pointer;}
+
+/* ODA — tam yükseklik kullan */
+.oda-wrapper{flex:1;position:relative;border-radius:18px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.35);}
+.oda-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+
+@keyframes sarsinti{
+  0%,100%{transform:translate(0,0)}10%{transform:translate(-7px,4px)}20%{transform:translate(7px,-4px)}
+  35%{transform:translate(-9px,3px)}50%{transform:translate(9px,-3px)}65%{transform:translate(-5px,5px)}
+  80%{transform:translate(5px,-2px)}90%{transform:translate(-2px,2px)}
+}
+.oda-wrapper.sarsilıyor{animation:sarsinti 1.2s ease;}
+
+.alan{position:absolute;cursor:pointer;border-radius:8px;background:transparent;transition:background .2s;}
+.alan.tehlikeli:hover{background:rgba(255,71,87,.18);}
+.alan.guvenli-alan:hover{background:rgba(46,213,115,.18);}
+.alan.pasif{pointer-events:none;}
+
+.rozet{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:clamp(1.8rem,4.5vw,2.5rem);opacity:0;transition:opacity .3s,transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));}
+.alan.gosterildi .rozet{opacity:1;transform:translate(-50%,-50%) scale(1);}
+@keyframes parlaTehlike{0%,100%{box-shadow:inset 0 0 0 3px var(--tehlike)}50%{box-shadow:inset 0 0 0 6px var(--tehlike),0 0 22px var(--tehlike)}}
+@keyframes parlaGuvenli{0%,100%{box-shadow:inset 0 0 0 3px var(--guvenli)}50%{box-shadow:inset 0 0 0 6px var(--guvenli),0 0 22px var(--guvenli)}}
+.alan.gosterildi.tehlikeli{animation:parlaTehlike .7s ease;}
+.alan.gosterildi.guvenli-alan{animation:parlaGuvenli .7s ease;}
+
+.uyari{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:8px 22px;border-radius:50px;font-weight:800;font-size:.85rem;opacity:0;pointer-events:none;z-index:200;transition:opacity .3s;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.2);}
+.uyari.goster{opacity:1;}
+.uyari.k{background:var(--tehlike);color:white;}
+.uyari.y{background:var(--guvenli);color:white;}
+
+.mk{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:300;animation:mkuc .8s ease forwards;}
+@keyframes mkuc{0%{transform:translate(0,0) scale(1);opacity:1;}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}}
+.kp{position:fixed;width:12px;height:12px;border-radius:3px;pointer-events:none;z-index:99;animation:kpdus 1.8s ease-in forwards;}
+@keyframes kpdus{0%{transform:translateY(-20px) rotate(0);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+
+.gecis{display:none;position:fixed;inset:0;background:rgba(7,59,76,.88);z-index:90;align-items:center;justify-content:center;padding:20px;}
+.gecis.aktif{display:flex;animation:fi .4s ease;}
+.gecis-kart{background:#fff;border-radius:24px;padding:28px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.gecis-kart h2{font-family:'Fredoka One',cursive;font-size:1.35rem;color:var(--koyu);margin-bottom:8px;}
+.gecis-kart p{font-size:.88rem;color:#555;margin-bottom:18px;line-height:1.6;}
+.btn-devam{background:linear-gradient(135deg,#06D6A0,#118AB2);color:white;border:none;padding:13px 30px;border-radius:50px;font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;box-shadow:0 5px 0 #0a6b54;}
+
+/* TAMAMLANDI — daha güzel tebrik ekranı */
+.tamam{display:none;position:fixed;inset:0;background:rgba(7,59,76,.92);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.tamam.aktif{display:flex;animation:fi .5s ease;}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.tamam-kart{background:linear-gradient(135deg,#fff 0%,#FFF9EF 100%);border-radius:28px;padding:28px 24px;max-width:440px;width:100%;text-align:center;box-shadow:0 16px 48px rgba(0,0,0,.35);border:3px solid var(--sari);}
+.tamam-kart .rozet-buyuk{font-size:3.5rem;margin-bottom:4px;animation:rozBob 1s ease-in-out infinite;}
+@keyframes rozBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.tamam-kart h2{font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--koyu);margin-bottom:4px;}
+.tamam-kart .alt-baslik{font-size:.88rem;color:#666;margin-bottom:10px;font-weight:700;}
+.tamam-kart img{width:110px;border-radius:50%;margin:8px auto;display:block;border:4px solid var(--sari);box-shadow:0 4px 14px rgba(0,0,0,.15);}
+.ozet{background:white;border-radius:14px;padding:12px 16px;margin:10px 0;text-align:left;font-size:.78rem;color:var(--koyu);line-height:2;}
+.ozet-baslik{font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--mavi);margin-bottom:4px;}
+.btn-ileri{background:linear-gradient(135deg,#FFE033,#FF9F1C);color:#2D3047;border:none;padding:14px 32px;border-radius:50px;font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;box-shadow:0 6px 0 #c27700;margin-top:10px;transition:transform .1s,box-shadow .1s;}
+.btn-ileri:active{transform:translateY(4px);box-shadow:0 2px 0 #c27700;}
+</style>
+</head>
+<body>
+
+<div class="cloud" style="top:7%;animation-duration:19s;animation-delay:0s">
+  <svg width="130" height="52"><ellipse cx="65" cy="37" rx="60" ry="20" fill="white"/><ellipse cx="42" cy="28" rx="30" ry="20" fill="white"/><ellipse cx="85" cy="26" rx="25" ry="17" fill="white"/></svg>
+</div>
+<div class="cloud" style="top:15%;animation-duration:28s;animation-delay:8s">
+  <svg width="100" height="42"><ellipse cx="50" cy="30" rx="45" ry="16" fill="white"/><ellipse cx="32" cy="22" rx="23" ry="15" fill="white"/><ellipse cx="66" cy="20" rx="20" ry="14" fill="white"/></svg>
+</div>
+<div class="cloud" style="top:3%;animation-duration:35s;animation-delay:14s">
+  <svg width="165" height="60"><ellipse cx="82" cy="43" rx="75" ry="22" fill="white"/><ellipse cx="54" cy="33" rx="36" ry="24" fill="white"/><ellipse cx="108" cy="31" rx="32" ry="20" fill="white"/></svg>
+</div>
+
+<div class="oyun">
+  <div class="sol">
+    <div class="etiket" id="etiket">Aşama 1</div>
+    <img class="karkas-img" id="kimg" src="karkas-mutlu.png" alt="Karkaş">
+    <div class="balon" id="balon">Merhaba!</div>
+    <div class="sayac" id="sayac">
+      <div class="dot" id="d1">1</div>
+      <div class="dot" id="d2">2</div>
+      <div class="dot" id="d3">3</div>
+      <div class="dot" id="d4">4</div>
+      <div class="dot" id="d5">5</div>
+      <div class="dot" id="d6">6</div>
+    </div>
+  </div>
+
+  <div class="sag">
+    <div class="ust-bar">
+      <button class="back-btn" onclick="window.location.href='index.html'">&#8592;</button>
+      <div class="baslik" id="baslik">Evde Risk Avcısı — Tehlikeli yerleri bul!</div>
+      <button class="ses-btn" id="sesBtn" onclick="sesDegistir()">Ses Açık</button>
+    </div>
+
+    <div class="oda-wrapper" id="oda">
+      <img class="oda-bg" src="tehlikeavi-oda.png" alt="oda">
+
+      <div class="alan tehlikeli" id="solresim" style="left:0%;top:3%;width:13%;height:34%" onclick="tikla('solresim',event)"><div class="rozet" id="r-solresim">⚠️</div></div>
+      <div class="alan tehlikeli" id="kitaplik" style="left:13%;top:3%;width:22%;height:86%" onclick="tikla('kitaplik',event)"><div class="rozet" id="r-kitaplik">⚠️</div></div>
+      <div class="alan tehlikeli" id="vazo" style="left:53%;top:2%;width:13%;height:20%" onclick="tikla('vazo',event)"><div class="rozet" id="r-vazo">⚠️</div></div>
+      <div class="alan tehlikeli" id="ortaresim" style="left:37%;top:28%;width:24%;height:24%" onclick="tikla('ortaresim',event)"><div class="rozet" id="r-ortaresim">⚠️</div></div>
+      <div class="alan tehlikeli" id="lamba" style="left:63%;top:25%;width:9%;height:44%" onclick="tikla('lamba',event)"><div class="rozet" id="r-lamba">⚠️</div></div>
+      <div class="alan tehlikeli" id="pencere" style="left:77%;top:2%;width:23%;height:75%" onclick="tikla('pencere',event)"><div class="rozet" id="r-pencere">⚠️</div></div>
+
+      <div class="alan guvenli-alan pasif" id="koltuk" style="left:0%;top:44%;width:24%;height:52%" onclick="tikla('koltuk',event)"><div class="rozet" id="r-koltuk">✅</div></div>
+      <div class="alan guvenli-alan pasif" id="masa" style="left:33%;top:44%;width:42%;height:54%" onclick="tikla('masa',event)"><div class="rozet" id="r-masa">✅</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="uyari" id="uyari"></div>
+
+<div class="gecis" id="gecis">
+  <div class="gecis-kart">
+    <div style="font-size:2.8rem">🎉</div>
+    <h2>Harika! Tüm tehlikeleri buldun!</h2>
+    <p>Şimdi depremde nereye sığınacağını öğrenelim. Güvenli yerleri bul!</p>
+    <button class="btn-devam" onclick="guvenliBaslat()">Güvenli Yerleri Bul!</button>
+  </div>
+</div>
+
+<div class="tamam" id="tamam">
+  <div class="tamam-kart">
+    <div class="rozet-buyuk">🏆</div>
+    <h2>Tebrikler, Risk Avcısı!</h2>
+    <div class="alt-baslik">Evdeki tehlikeleri ve güvenli yerleri öğrendin!</div>
+    <img src="karkas-mutlu.png" alt="Karkaş" id="tamam-karkas">
+    <div class="ozet">
+      <div class="ozet-baslik">Tehlikeli Yerler</div>
+      Kitaplık ve raflar — devrilebilir, sabitlen!<br>
+      Yüksek raftaki vazo — düşüp kırılır!<br>
+      Duvardaki resimler — düşebilir!<br>
+      Lamba — devrilir, yangın riski!<br>
+      Pencere — cam kırılır!
+      <br><br>
+      <div class="ozet-baslik">Güvenli Yerler</div>
+      Masa altı — en güvenli sığınak!<br>
+      Koltuk yanı — çömel ve tutun!<br>
+      <br>
+      <strong>Depremde: ÇÖK, KAPAN, TUTUN!</strong>
+    </div>
+    <button class="btn-ileri" onclick="
+      document.body.style.opacity='0';
+      document.body.style.transition='opacity 0.3s';
+      sessionStorage.setItem('startStage','1');
+      setTimeout(()=>location.href='index.html', 300);
+    ">Keşif Zamanı! İlerle →</button>
+  </div>
+</div>
+
+<script>
+let sesAcik = true;
+const synth = window.speechSynthesis;
+
+function sesDegistir(){
+  sesAcik = !sesAcik;
+  document.getElementById('sesBtn').textContent = sesAcik ? 'Ses Açık' : 'Ses Kapalı';
+  if(!sesAcik) synth.cancel();
+}
+
+// Sesli okuma için metni hazırla
+// ÇÖK sorununu çöz: büyük harf ÇÖK yerine "chok" kullan ses için
+function sesToMetin(t){
+  return t
+    .replace(/[^\u0000-\u024F ]/g,' ')
+    .replace(/ÇÖK/g,'chok')
+    .replace(/çök/g,'chok')
+    .replace(/KAPAN/g,'kapan')
+    .replace(/TUTUN/g,'tutun')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function sesKonustu(metin){
+  return new Promise(resolve=>{
+    if(!sesAcik){ resolve(); return; }
+    synth.cancel();
+    setTimeout(()=>{
+      const u = new SpeechSynthesisUtterance(sesToMetin(metin));
+      u.lang='tr-TR'; u.rate=0.88; u.pitch=1.1;
+      // Maksimum 12 saniye bekle, sonra devam et
+      const zaman = setTimeout(()=>resolve(), 12000);
+      u.onend = ()=>{ clearTimeout(zaman); resolve(); };
+      u.onerror = ()=>{ clearTimeout(zaman); resolve(); };
+      synth.speak(u);
+    }, 200);
+  });
+}
+
+// Balon: hızlı mesaj göster+seslendir, bittikten sonra açıklamayı göster+seslendir
+async function balonSoy(hizli, aciklama){
+  const b = document.getElementById('balon');
+  synth.cancel();
+  await new Promise(r=>setTimeout(r,200));
+  b.textContent = hizli;
+  await sesKonustu(hizli);
+  if(!aciklama) return;
+  await new Promise(r=>setTimeout(r,200));
+  b.textContent = aciklama;
+  await sesKonustu(aciklama);
+}
+
+function kgoster(hal, anim){
+  const img = document.getElementById('kimg');
+  img.src = 'karkas-' + hal + '.png';
+  if(anim){
+    img.classList.remove('sasir','sevin','uzul');
+    void img.offsetWidth;
+    img.classList.add(anim);
+    setTimeout(()=>img.classList.remove(anim), 700);
+  }
+}
+
+async function balonSoy(hizli, aciklama){
+  const b = document.getElementById('balon');
+  b.textContent = hizli;
+  await sesKonustu(hizli);
+  if(!aciklama) return;
+  await new Promise(r=>setTimeout(r,300));
+  b.textContent = aciklama;
+  await sesKonustu(aciklama);
+}
+
+const TEHLIKE = {
+  solresim:{
+    hizli:"Duvardaki resim tehlikeli!",
+    aciklama:"Duvara asılı resimler depremde düşer ve ciddi yaralanmalara yol açabilir. Asılı eşyaların altında asla durma!",
+    karkas:"sasirmis", anim:"sasir"
+  },
+  kitaplik:{
+    hizli:"Kitaplık tehlikeli, devrilebilir!",
+    aciklama:"Kitaplıklar depremde devrilir, içindeki kitaplar ve eşyalar üstüne düşer. Kitaplıklar L demiriyle duvara sabitlenmelidir, sabitlenmemişlerden uzak dur!",
+    karkas:"uzgun", anim:"uzul"
+  },
+  vazo:{
+    hizli:"Vazo yüksekte, düşüp kırılır!",
+    aciklama:"Yüksek raftaki cam ve seramik eşyalar sarsıntıda fırlayıp kırılır, keskin parçalar etrafa dağılır. Kırılgan eşyaları alçak yerlere koy!",
+    karkas:"sasirmis", anim:"sasir"
+  },
+  ortaresim:{
+    hizli:"Bu resim de tehlikeli!",
+    aciklama:"Ağır resim çerçeveleri depremde düşerek ciddi yaralanmalara yol açar. Duvara asılı her eşyanın altında ve önünde durmamak gerekir!",
+    karkas:"uzgun", anim:"uzul"
+  },
+  lamba:{
+    hizli:"Lamba devrilir, yangın çıkabilir!",
+    aciklama:"Ayaklı lambalar devrilince yaralayabilir. Elektrik kablosunun kopmasıyla yangın riski de taşır. Depremde lambadan uzak dur!",
+    karkas:"sasirmis", anim:"sasir"
+  },
+  pencere:{
+    hizli:"Pencere tehlikeli, cam kırılır!",
+    aciklama:"Depremde camlar kırılır ve keskin parçalar etrafa dağılır. Deprem sırasında pencerelerden ve dış duvarlardan uzak durulmalıdır!",
+    karkas:"uzgun", anim:"uzul"
+  }
+};
+
+const GUVENLI = {
+  koltuk:{
+    hizli:"Koltuk yanı güvenli sığınak!",
+    aciklama:"Büyük koltuğun yanına çömel, başını ve boynunu kollarınla koru, koltuğa tutun. Buna ÇÖK KAPAN TUTUN diyoruz. Sarsıntı tamamen durana kadar bu pozisyonda kal!",
+    karkas:"mutlu", anim:"sevin"
+  },
+  masa:{
+    hizli:"Masa altı en güvenli yer!",
+    aciklama:"Sağlam masanın altına gir, masanın bacağını iki elinle sıkıca tut ve başını koru. ÇÖK KAPAN TUTUN! Masa hareket ederse onunla birlikte kayarak pozisyonunu koru!",
+    karkas:"mutlu", anim:"sevin"
+  }
+};
+
+let nTehlike=0, nGuvenli=0, tiklar=[], bitti=false, guvenliMod=false;
+
+function uyari(mesaj, tip){
+  const u = document.getElementById('uyari');
+  u.textContent = mesaj;
+  u.className = 'uyari goster ' + tip;
+  setTimeout(()=>u.classList.remove('goster'), 2200);
+}
+
+function miniKonfeti(x, y){
+  const renkler=['#FF6B35','#FFD166','#06D6A0','#118AB2','#FF4757','#9b59b6'];
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');
+    p.className='mk';
+    const a=(i/14)*360, d=45+Math.random()*45;
+    p.style.cssText=`left:${x}px;top:${y}px;background:${renkler[i%renkler.length]};--tx:${Math.cos(a*Math.PI/180)*d}px;--ty:${Math.sin(a*Math.PI/180)*d-35}px;animation-delay:${Math.random()*.15}s;`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),1000);
+  }
+}
+
+function buyukKonfeti(){
+  const renkler=['#FF6B35','#FFD166','#06D6A0','#118AB2','#FF4757','#9b59b6','#FF9F1C'];
+  for(let i=0;i<90;i++){
+    const p=document.createElement('div');
+    p.className='kp';
+    p.style.cssText=`left:${Math.random()*100}vw;top:-20px;background:${renkler[i%renkler.length]};animation-delay:${Math.random()*1.5}s;animation-duration:${1.4+Math.random()*1}s;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),3000);
+  }
+}
+
+async function tikla(id, e){
+  if(tiklar.includes(id)||bitti) return;
+  const el=document.getElementById(id);
+  if(el.classList.contains('pasif')) return;
+  tiklar.push(id);
+
+  const rect=el.getBoundingClientRect();
+  const mx=rect.left+rect.width/2, my=rect.top+rect.height/2;
+
+  if(!guvenliMod && TEHLIKE[id]){
+    const n=TEHLIKE[id];
+    nTehlike++;
+    el.classList.add('gosterildi');
+    document.getElementById('d'+nTehlike).classList.add('t-bulundu');
+    miniKonfeti(mx,my);
+    uyari('Tehlike buldun!','k');
+    kgoster(n.karkas, n.anim);
+    await balonSoy(n.hizli, n.aciklama);
+
+    if(nTehlike>=6){
+      const oda=document.getElementById('oda');
+      oda.classList.add('sarsilıyor');
+      kgoster('sasirmis','sasir');
+      document.getElementById('balon').textContent='Deprem oluyor! Hemen güvenli bir yere kaç!';
+      await sesKonustu('Deprem oluyor! Hemen guvenli bir yere kach!');
+      oda.classList.remove('sarsilıyor');
+      document.getElementById('gecis').classList.add('aktif');
+    }
+
+  } else if(guvenliMod && GUVENLI[id]){
+    const n=GUVENLI[id];
+    nGuvenli++;
+    el.classList.add('gosterildi');
+    miniKonfeti(mx,my);
+    uyari(n.hizli,'y');
+    kgoster(n.karkas, n.anim);
+    await balonSoy(n.hizli, n.aciklama);
+
+    if(nGuvenli>=2){
+      bitti=true;
+      synth.cancel();
+      await new Promise(r=>setTimeout(r,400));
+      buyukKonfeti();
+      kgoster('mutlu','sevin');
+      const tebrikMetin = 'İnanılmaz! Evdeki tehlikeleri ve güvenli yerleri öğrendin! Artık depremde ne yapacağını biliyorsun!';
+      const tebrikSes = 'Inanilmaz! Evdeki tehlikeleri ve guvenli yerleri ogrendin! Artik depremde ne yapacagini biliyorsun!';
+      document.getElementById('balon').textContent = tebrikMetin;
+      await sesKonustu(tebrikSes);
+      document.getElementById('tamam').classList.add('aktif');
+    }
+  }
+}
+
+function guvenliBaslat(){
+  guvenliMod=true;
+  document.getElementById('gecis').classList.remove('aktif');
+  document.getElementById('koltuk').classList.remove('pasif');
+  document.getElementById('masa').classList.remove('pasif');
+  Object.keys(TEHLIKE).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && !el.classList.contains('gosterildi')) el.classList.add('pasif');
+  });
+  document.getElementById('sayac').innerHTML=`
+    <div class="dot" style="background:rgba(46,213,115,.35);border-color:rgba(46,213,115,.5);color:white">?</div>
+    <div class="dot" style="background:rgba(46,213,115,.35);border-color:rgba(46,213,115,.5);color:white">?</div>
+  `;
+  document.getElementById('etiket').textContent='Güvenli Yer';
+  document.getElementById('baslik').textContent='Depremde güvenli yerleri bul!';
+  kgoster('mutlu','sevin');
+  const gecisMetin = 'Aferin! Simdi guvenli yerleri bul. Depremde nereye siginabilirsin?';
+  document.getElementById('balon').textContent = 'Aferin! Şimdi güvenli yerleri bul. Depremde nereye sığınabilirsin?';
+  sesKonustu(gecisMetin);
+}
+
+function baslat(){
+  nTehlike=0; nGuvenli=0; tiklar=[]; bitti=false; guvenliMod=false;
+  document.getElementById('tamam').classList.remove('aktif');
+  document.getElementById('gecis').classList.remove('aktif');
+  document.getElementById('etiket').textContent='Aşama 1';
+  document.getElementById('baslik').textContent='Evde Risk Avcısı — Tehlikeli yerleri bul!';
+  document.getElementById('sayac').innerHTML=`
+    <div class="dot" id="d1">1</div><div class="dot" id="d2">2</div>
+    <div class="dot" id="d3">3</div><div class="dot" id="d4">4</div>
+    <div class="dot" id="d5">5</div><div class="dot" id="d6">6</div>
+  `;
+  [...Object.keys(TEHLIKE),...Object.keys(GUVENLI)].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.classList.remove('gosterildi');
+      if(GUVENLI[id]) el.classList.add('pasif');
+      else el.classList.remove('pasif');
+    }
+  });
+
+  kgoster('mutlu', null);
+  const balonMetin = 'Merhaba! Ben Karkaş! Bu odada 6 tehlikeli yer gizlenmiş. Tehlikeli yerleri bulup tıkla, sonra güvenli yerleri de keşfet!';
+  const sesMetin = 'Merhaba! Ben Karkas! Bu odada 6 tehlikeli yer gizlenmis. Tehlikeli yerleri bulup tikla, sonra guvenli yerleri de kesfet!';
+  document.getElementById('balon').textContent = balonMetin;
+
+  const ilkSes = ()=>{
+    sesKonustu(sesMetin);
+    document.removeEventListener('click', ilkSes);
+    document.removeEventListener('touchstart', ilkSes);
+  };
+  document.addEventListener('click', ilkSes, {once:true});
+  document.addEventListener('touchstart', ilkSes, {once:true});
+}
+
+window.addEventListener('load',()=>setTimeout(baslat, 500));
+</script>
+</body>
+</html>
