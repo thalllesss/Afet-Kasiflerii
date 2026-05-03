@@ -1069,6 +1069,7 @@ function startModule(){ window.location.href='evde-risk-avcisi.html';
 // ══════════════════════════════════
 // Evde Risk Avcısı'ndan döndüyse Keşif Zamanı'nı başlat
 function loadStage(n){
+  ST.stage=n;
   document.getElementById('nextBtn').classList.remove('show');
   const cfg=[
     {t:'🔍 Keşif Zamanı!', s:'Her nesneye dokun ve tanı!',
