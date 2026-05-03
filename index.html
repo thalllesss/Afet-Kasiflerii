@@ -1760,7 +1760,7 @@ function araVeriKopyala() {
 window.addEventListener('load', function(){
   if(sessionStorage.getItem('startStage')==='1'){
     sessionStorage.removeItem('startStage');
-    ST.stage=1; ST.s1done?.clear(); loadStage(1); showScr('ss');
+    ST.stage=1; loadStage(1); showScr('ss');
     setTimeout(()=>{ 
       document.documentElement.style.visibility='visible';
       SES?.acilis?.(); 
